@@ -1,8 +1,40 @@
+<?php
+include "connect.php";
+$get_categories="SELECT * FROM category";
+$categories = mysqli_query($conn,$get_categories);
+
+if($_SERVER["REQUEST_METHOD"]=="POST"){
+$title =$_POST['name'];
+$price=$_POST['price'];
+$category=$_POST['category'];
+
+$thumbnail=$_FILES['thumbnail'];
+$thumbnailName=$thumbnail["name"];
+$thumbnailImpName=$thumbnail["tmp_name"];
+$thumbnailPath="assets/img".$thumbnailName;
+move_uploaded_file($thumbnailImpName,$thumbnailPath);
+
+$sql="INSERT INTO products(prod_name,price,category_id,thumbnail) VALUES
+(?,?,?,?)";
+$stmt=$conn->prepare($sql);
+$stmt->bind_param("sdis",$title,$price,$category,$thumbnailPath);
+
+if($stmt->execute()){
+    header("Location:index.php");
+    exit();
+} else{
+    echo "Error:".$sql."<br>".$conn->error;
+}
+$stmt->close();
+
+}
+$conn->close();
+?>
 <!DOCTYPE html>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
 <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <![endif]-->
 <html>
 
 <head>
@@ -22,7 +54,7 @@
 <body>
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/index.html">ATN Toy</a>
+            <a class="navbar-brand" href="/index.php">ATN Toy</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
                 aria-label="Toggle navigation">
@@ -31,10 +63,10 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="./index.html">Home</a>
+                        <a class="nav-link active" aria-current="page" href="./index.php">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="./create.html">New</a>
+                        <a class="nav-link" href="./create.php">New</a>
                     </li>
 
 
@@ -47,28 +79,35 @@
         </div>
     </nav>
 
-    <form class="row container  " style="margin-left: auto; margin-right: auto;">
+    <form class="row container  " style="margin-left: auto; margin-right: auto;" method="POST" enctype="multipart/form-data">
 
       <h5 style="text-align: center;">Create a new product</h5>
+
             <div class="col-12">
                 <label for="product_name" class="form-label">Product name</label>
-                <input type="text" class="form-control" id="product_name" placeholder="Input product name">
+                <input type="text" class="form-control" id="name" name="name" placeholder="Input product name">
             </div>
             <div class="col-12">
                 <label for="price" class="form-label">Price</label>
-                <input type="number" class="form-control" id="price" placeholder="Input the price of the product">
+                <input type="number" class="form-control" id="price" name="price" placeholder="Input the price of the product">
             </div>
             <div class="col-12">
-                <label for="sold" class="form-label">Sold</label>
-                <input type="number" class="form-control" id="sold" placeholder="Input the number of sold products">
+                <label for="category" class="form-label">Category</label>
+                <select class="form-select" id="category" name="category" required>
+                    <option selected disabled value="">Choose a category</option>   
+                    <?php foreach ($categories as $category){?>
+                        <option class="text-dark"value="<?php echo $category["id"] ?>"><?php echo "#".$category["cate_name"]?></option>  
+                <?php    } ?>
+                               
+                 </select>
             </div>
             <div class="col-12">
-                <label for="img" class="form-label">Image</label>
-                <input type="file" class="form-control" id="product_name" >
+                <label for="prod_img" class="form-label">Image</label>
+                <input type="file" class="form-control" id="prod_img" name="thumbnail" >
             </div>
             <div class="d-flex justify-content-center mt-3 gap-3">
                 <button type="submit" class="btn btn-success ">Create </button>
-                <a href="./index.html" class="btn btn-secondary " type="button">Back to products</a>
+                <a href="./index.php" class="btn btn-secondary " type="button">Back to products</a>
             </div>
     </form>
 
